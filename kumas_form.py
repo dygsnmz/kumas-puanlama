@@ -23,19 +23,25 @@ hata_turu = st.selectbox("Hata Türü", list(hata_puanlari.keys()))
 hata_adedi = st.number_input("Hata Adedi", min_value=1, step=1)
 
 if st.button("Puanlamayı Hesapla"):
-    puan_adet = hata_puanlari[hata_turu]["puan"]  # eksikse bu satır eklensin
-    toplam_puan = puan_adet * hata_adedi
-    kategori = hata_puanlari[hata_turu]["kategori"]
-    puan_metre = round(toplam_puan / kumas_uzunlugu, 2)
+    if kumas_uzunlugu <= 0:
+        st.error("⚠️ Kumaş uzunluğu 0 olamaz. Lütfen geçerli bir değer girin.")
+    else:
+        puan_adet = hata_puanlari[hata_turu]["puan"]
+        kategori = hata_puanlari[hata_turu]["kategori"]
+        toplam_puan = puan_adet * hata_adedi
+        puan_metre = round(toplam_puan / kumas_uzunlugu, 2)
 
-    kalite_sinifi = "A (Kabul)" if puan_metre <= 1 else ("B (Orta)" if puan_metre <= 1.5 else "C (Red)")
+        kalite_sinifi = "A (Kabul)" if puan_metre <= 1 else (
+            "B (Orta)" if puan_metre <= 1.5 else "C (Red)"
+        )
 
-    st.subheader("📊 Sonuçlar")
-    st.write(f"**Toplam Puan:** {toplam_puan}")
-    st.write(f"**Puan/Metre:** {puan_metre}")
-    st.write(f"**Hata Kategorisi:** {kategori}")
-    st.write(f"**Genel Kalite Sınıfı:** {kalite_sinifi}")
+        st.subheader("📊 Sonuçlar")
+        st.write(f"**Toplam Puan:** {toplam_puan}")
+        st.write(f"**Puan/Metre:** {puan_metre}")
+        st.write(f"**Hata Kategorisi:** {kategori}")
+        st.write(f"**Genel Kalite Sınıfı:** {kalite_sinifi}")
 
-    for musteri, tolerans in musteri_tolerans.items():
-        sonuc = "Kabul" if puan_metre <= tolerans else "Red"
-        st.write(f"**{musteri} için Durum:** {sonuc}")
+        for musteri, tolerans in musteri_tolerans.items():
+            sonuc = "Kabul" if puan_metre <= tolerans else "Red"
+            st.write(f"**{musteri} için Durum:** {sonuc}")
+
