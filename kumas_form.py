@@ -23,9 +23,9 @@ hata_turu = st.selectbox("Hata Türü", list(hata_puanlari.keys()))
 hata_adedi = st.number_input("Hata Adedi", min_value=1, step=1)
 
 if st.button("Puanlamayı Hesapla"):
-    puan_adet = hata_puanlari[hata_turu]["puan"]
+    puan_adet = hata_puanlari[hata_turu]["puan"]  # eksikse bu satır eklensin
+    toplam_puan = puan_adet * hata_adedi
     kategori = hata_puanlari[hata_turu]["kategori"]
-    toplam_puan = puan_adedi * hata_adedi
     puan_metre = round(toplam_puan / kumas_uzunlugu, 2)
 
     kalite_sinifi = "A (Kabul)" if puan_metre <= 1 else ("B (Orta)" if puan_metre <= 1.5 else "C (Red)")
