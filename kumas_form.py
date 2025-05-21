@@ -130,7 +130,4 @@ st.download_button(
     data=towrite,
     file_name="kumas_kalite_puanlama.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-),
-            file_name="kumas_kalite_puanlama.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+)
