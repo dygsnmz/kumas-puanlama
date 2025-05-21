@@ -123,7 +123,7 @@ if st.button("✅ Tüm Verileri Göster"):
             "Kontrol Eden Personel": kontrol_personel
         }])
         genel_df.to_excel(writer, index=False, sheet_name='Genel Bilgiler')
-        writer.save()
+        # writer.save() satırı kaldırıldı çünkü 'with' bloğu otomatik kaydeder
         st.download_button(
             label="📥 Excel Olarak İndir",
             data=towrite.getvalue(),
