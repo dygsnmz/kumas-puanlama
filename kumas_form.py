@@ -3,6 +3,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import date
+import io
 
 # Hata puanları ve kategorileri
 hata_puanlari = {
@@ -92,7 +93,8 @@ for i in range(rulo_sayisi):
 
 if st.button("✅ Tüm Verileri Göster"):
     st.subheader("🧾 Rulo Kalite Sonuçları")
-    st.dataframe(pd.DataFrame(rulo_kayitlari))
+    rulo_df = pd.DataFrame(rulo_kayitlari)
+    st.dataframe(rulo_df)
 
     st.subheader("📦 Genel Form Verileri")
     st.write(f"**Müşteri:** {musteri}")
@@ -104,3 +106,27 @@ if st.button("✅ Tüm Verileri Göster"):
     st.write(f"**Kumaş Kodu:** {kumaskodu}")
     st.write(f"**Kompozisyon:** {kompozisyon}")
     st.write(f"**Kontrol Eden Personel:** {kontrol_personel}")
+
+    # Excel olarak indir
+    towrite = io.BytesIO()
+    with pd.ExcelWriter(towrite, engine='xlsxwriter') as writer:
+        rulo_df.to_excel(writer, index=False, sheet_name='Rulo Verileri')
+        genel_df = pd.DataFrame([{
+            "Müşteri": musteri,
+            "Model No": model_no,
+            "Kumaşçı Firma": kumascifirma,
+            "Kullanılabilir En": kull_en,
+            "Ağırlık": agirlik,
+            "Tarih": tarih,
+            "Kumaş Kodu": kumaskodu,
+            "Kompozisyon": kompozisyon,
+            "Kontrol Eden Personel": kontrol_personel
+        }])
+        genel_df.to_excel(writer, index=False, sheet_name='Genel Bilgiler')
+        writer.save()
+        st.download_button(
+            label="📥 Excel Olarak İndir",
+            data=towrite.getvalue(),
+            file_name="kumas_kalite_puanlama.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
