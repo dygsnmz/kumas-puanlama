@@ -125,7 +125,6 @@ if st.button("✅ Tüm Verileri Göster"):
         genel_df.to_excel(writer, index=False, sheet_name='Genel Bilgiler')
         # writer.save() satırı kaldırıldı çünkü 'with' bloğu otomatik kaydeder
         towrite.seek(0)
-        towrite.seek(0)
         st.download_button(
             label="📥 Excel Olarak İndir",
             data=towrite,
