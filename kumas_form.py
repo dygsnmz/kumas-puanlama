@@ -1,5 +1,8 @@
+# Kumaş Hata Puanlama Çoklu Girişli ve Bilgi Toplamalı Form (Streamlit)
+
 import streamlit as st
 import pandas as pd
+from datetime import date
 
 # Hata puanları ve kategorileri
 hata_puanlari = {
@@ -16,59 +19,74 @@ musteri_tolerans = {
     "Müşteri C": 0.5
 }
 
-st.title("🧵 Çoklu Örme Kumaş Hata Puanlama")
+st.title("🧵 Örme Kumaş Kalite Puanlama ve Hata Takip Formu")
 
-rulo_no = st.text_input("Rulo No")
-kumas_uzunlugu = st.number_input("Kumaş Uzunluğu (metre)", min_value=1.0, step=0.5)
+# 📌 Form Genel Bilgileri
+st.header("🔖 Genel Bilgiler")
+musteri = st.text_input("Müşteri")
+model_no = st.text_input("Model No")
+kumascifirma = st.text_input("Kumaşçı Firma")
+kull_en = st.number_input("Kullanılabilir En (cm)", min_value=0.0, step=0.1)
+agirlik = st.number_input("Ağırlık (gr/m2)", min_value=0.0, step=0.1)
+tarih = st.date_input("Tarih", value=date.today())
+kumaskodu = st.text_input("Kumaş Kodu")
+kompozisyon = st.text_input("Kompozisyon")
+kontrol_personel = st.text_input("Kontrol Eden Personel")
 
-st.markdown("### 🔢 Hataları Girin")
+st.header("📋 Rulo ve Hata Bilgileri")
+rulo_sayisi = st.number_input("Kaç rulo için giriş yapacaksınız?", min_value=1, max_value=20, value=1, step=1)
 
-hata_sayisi = st.number_input("Kaç farklı hata türü gireceksiniz?", min_value=1, max_value=10, value=3, step=1)
+rulo_kayitlari = []
 
-hata_verileri = []
+for i in range(rulo_sayisi):
+    st.markdown(f"### 📦 Rulo {i+1}")
+    rulo_no = st.text_input(f"Rulo No #{i+1}", key=f"rulo{i}")
+    parti_no = st.text_input(f"Parti / Lot No #{i+1}", key=f"parti{i}")
+    varyant = st.text_input(f"Desen / Varyant #{i+1}", key=f"varyant{i}")
+    gelen_mkg = st.number_input(f"Gelen M/Kg #{i+1}", min_value=0.0, step=0.1, key=f"gelen{i}")
+    olculen_mkg = st.number_input(f"Ölçülen M/Kg #{i+1}", min_value=0.0, step=0.1, key=f"olculen{i}")
+    en_cm = st.number_input(f"Kullanılabilir En #{i+1} (cm)", min_value=0.0, step=0.1, key=f"en{i}")
+    hata_sayisi = st.number_input(f"Kaç hata girişi yapılacak? #{i+1}", min_value=1, max_value=10, value=2, key=f"hata_sayi{i}")
 
-for i in range(hata_sayisi):
-    st.markdown(f"#### Hata {i+1}")
-    hata_turu = st.selectbox(f"Hata Türü #{i+1}", list(hata_puanlari.keys()), key=f"tur{i}")
-    hata_adedi = st.number_input(f"Hata Adedi #{i+1}", min_value=0, step=1, key=f"adet{i}")
-    hata_verileri.append({"Tür": hata_turu, "Adet": hata_adedi})
+    toplam_puan = 0
+    hata_detay = []
 
-if st.button("Puanlamayı Hesapla"):
-    if kumas_uzunlugu <= 0:
-        st.error("⚠️ Kumaş uzunluğu 0 olamaz.")
-    else:
-        toplam_puan = 0
-        detaylar = []
+    for j in range(hata_sayisi):
+        hata_tur = st.selectbox(f"Hata Türü {j+1} (Rulo {i+1})", list(hata_puanlari.keys()), key=f"tur{i}_{j}")
+        adet = st.number_input(f"Adet {j+1} (Rulo {i+1})", min_value=0, step=1, key=f"adet{i}_{j}")
+        puan = hata_puanlari[hata_tur]["puan"]
+        toplam_puan += puan * adet
+        hata_detay.append({"Hata Türü": hata_tur, "Adet": adet, "Puan": puan})
 
-        for hata in hata_verileri:
-            tur = hata["Tür"]
-            adet = hata["Adet"]
-            puan = hata_puanlari[tur]["puan"]
-            kategori = hata_puanlari[tur]["kategori"]
-            alt_puan = puan * adet
-            toplam_puan += alt_puan
-            detaylar.append({
-                "Hata Türü": tur,
-                "Kategori": kategori,
-                "Adet": adet,
-                "Puan/Adet": puan,
-                "Toplam Puan": alt_puan
-            })
+    kumaş_uzunlugu = olculen_mkg  # burada ölçülen metre olarak alınıyor
+    puan_metre = round(toplam_puan / kumaş_uzunlugu, 2) if kumaş_uzunlugu > 0 else 0
+    kabul_red = "Kabul" if puan_metre <= 1 else "Red"
+    aciklama = st.text_area(f"Açıklama (Rulo {i+1})", key=f"aciklama{i}")
 
-        df = pd.DataFrame(detaylar)
-        puan_metre = round(toplam_puan / kumas_uzunlugu, 2)
-        kalite_sinifi = "A (Kabul)" if puan_metre <= 1 else ("B (Orta)" if puan_metre <= 1.5 else "C (Red)")
+    rulo_kayitlari.append({
+        "Rulo No": rulo_no,
+        "Parti/Lot No": parti_no,
+        "Desen/Varyant": varyant,
+        "Gelen M/kg": gelen_mkg,
+        "Ölçülen M/kg": olculen_mkg,
+        "Kullanılabilir En": en_cm,
+        "Toplam Puan": toplam_puan,
+        "Puan/Metre": puan_metre,
+        "Kabul/Red": kabul_red,
+        "Açıklama": aciklama
+    })
 
-        st.markdown("## 🧾 Detaylı Puanlama")
-        st.dataframe(df)
+if st.button("✅ Tüm Verileri Göster"):
+    st.subheader("🧾 Rulo Kalite Sonuçları")
+    st.dataframe(pd.DataFrame(rulo_kayitlari))
 
-        st.markdown("## 📊 Genel Sonuç")
-        st.write(f"**Toplam Puan:** {toplam_puan}")
-        st.write(f"**Puan/Metre:** {puan_metre}")
-        st.write(f"**Genel Kalite Sınıfı:** {kalite_sinifi}")
-
-        for musteri, tolerans in musteri_tolerans.items():
-            sonuc = "Kabul" if puan_metre <= tolerans else "Red"
-            st.write(f"**{musteri} için Durum:** {sonuc}")
-
-
+    st.subheader("📦 Genel Form Verileri")
+    st.write(f"**Müşteri:** {musteri}")
+    st.write(f"**Model No:** {model_no}")
+    st.write(f"**Kumaşçı Firma:** {kumascifirma}")
+    st.write(f"**Kullanılabilir En:** {kull_en} cm")
+    st.write(f"**Ağırlık:** {agirlik} gr/m2")
+    st.write(f"**Tarih:** {tarih}")
+    st.write(f"**Kumaş Kodu:** {kumaskodu}")
+    st.write(f"**Kompozisyon:** {kompozisyon}")
+    st.write(f"**Kontrol Eden Personel:** {kontrol_personel}")
